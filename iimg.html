@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+
+<title>Cordova</title>
+
+<script type="text/javascript" charset="utf-8" src="cordova-1.9.0.js"></script>
+
+<script>
+   
+	function init(){
+    	document.addEventListener("deviceready", onDeviceReady, false);   
+	}
+	
+	function onDeviceReady() {
+		document.addEventListener("backbutton", onBackButton, false);
+		var myObject = JSON.parse(sessionStorage.myObject);
+		db = window.openDatabase("Database", "1.0", "Cordova Demo", 2*1024*1024);
+		db.transaction(populateDB);
+	}
+	
+	function onBackButton(){
+		window.location.href="viewItem.html";
+		}
+	
+	function populateDB(tx) {
+		var myObject = JSON.parse(sessionStorage.myObject);
+		tx.executeSql("SELECT img FROM REMINDER WHERE iname = \'" + myObject +"\'", [], onSuccess, errorCBi);
+		}
+		
+	function onSuccess(tx, results) {
+		var len = results.rows.length;
+        if(len>0)
+        {
+			
+			var imageData = results.rows.item(0)['img'];
+			var smallImage = document.getElementById('smallImage');
+			smallImage.style.display = 'inline-block';
+			img= imageData;
+		    smallImage.src = "data:image/jpeg;base64," + imageData;
+		}
+	}
+	
+	function errorCBi(err) {
+		alert("Error fetching the image");
+	}
+</script>
+
+<style>
+table {
+    width:100%;
+    height:auto;
+    box-shadow: 6px 6px 5px #888888;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    border:0px;
+    font-size: 30px;
+    margin-bottom: 10%;
+}
+
+td {
+    padding: 2px;
+    text-align: center;
+    width: 100%:
+    margin-top:2%;
+    margin-bottom:2%; 
+}
+tr {
+	margin-top: 100px;
+	margin-bottom: 100px;
+	box-shadow: 3px 3px 2px #888888;
+	font-size: 14px;
+	color:#ffffff;
+	border-radius: 8px;
+	height:10%;
+}
+
+table caption {
+	background-color: #00BCD4;
+	padding: 5px;
+	margin-top:5%;
+	margin-bottom:5%;
+	font-size: 30px;
+    color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 6px 6px 5px #888888;
+}
+table th{
+	background-color: #ffffff;
+	padding: 5px;
+	margin-bottom:5px;
+	font-size: 20px;
+    color: #00BCD4;
+    border-radius: 8px;
+    box-shadow: 6px 6px 5px #888888;
+    align:center;
+}
+</style>
+</head>
+<body style="background-color:#f2f2f2;" onload="init()">
+
+<table style="width:100%;height:auto;border-radius:8px;">
+ <caption>Lend ya!</caption>
+<tr colspan="1">
+<td colspan="1"><img style="width:100%;height:auto;margin-top:10px;margin-bottom:30px;display:none;border-radius: 8px;box-shadow: 6px 6px 5px #888888;" id="smallImage" src="" /><br></td>
+</tr>
+</table>
+
+</body>
+</html>

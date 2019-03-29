@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+
+<title>Cordova</title>
+
+<script type="text/javascript" charset="utf-8" src="cordova-1.9.0.js"></script>
+
+<script>
+   
+	function init(){
+    	document.addEventListener("deviceready", onDeviceReady, false);   
+	}
+	
+	function onDeviceReady() {
+		document.addEventListener("backbutton", onBackButton, false);
+		var myObject = JSON.parse(sessionStorage.myObject);
+		db = window.openDatabase("Database", "1.0", "Cordova Demo", 2*1024*1024);
+		db.transaction(populateDB);
+	}
+	
+	function onBackButton(){
+		window.location.href="history.html";
+	}
+	
+	function populateDB(tx) {
+		var myObject = JSON.parse(sessionStorage.myObject);
+		tx.executeSql("SELECT activity,person,notify,lbdate,notifydate,status,img FROM REMINDER WHERE iname = \'" + myObject +"\'", [], onSuccess, errorCBi);
+		}
+		
+	function onSuccess(tx, results) {
+		var len = results.rows.length;
+        if(len>0)
+        {
+			
+			var i = JSON.parse(sessionStorage.myObject);
+			var a = results.rows.item(0)['activity'];
+			if(a==="Borrowed from")
+			{
+			document.getElementById("on").value = "Borrowed on : " +results.rows.item(0)['lbdate'];
+			document.getElementById("on").readOnly = true;
+			}
+			else
+			{
+			document.getElementById("on").value = "Lent on : "+results.rows.item(0)['lbdate'];
+			document.getElementById("on").readOnly = true;
+			}
+			var p = results.rows.item(0)['person'];
+			var notify = results.rows.item(0)['notify'];
+			if(notify==="Yes")
+			{
+			var n="Notify on";
+			var nd = results.rows.item(0)['notifydate'];
+			document.getElementById("notifydate").value = n+ " : "+nd;
+			document.getElementById("notifydate").readOnly = true;
+			}
+			else
+			{
+			var n="Do not notify";
+			var nd = "";
+			document.getElementById("notifydate").value = n
+			document.getElementById("notifydate").readOnly = true;
+			}
+			
+			var status = results.rows.item(0)['status'];
+			var s = "Status is : "+status;
+			
+			var imageData = results.rows.item(0)['img'];
+			
+			document.getElementById("iname").value = i;
+			document.getElementById("iname").readOnly = true;
+			
+			document.getElementById("activity").value = a + " : " +p;
+			document.getElementById("activity").readOnly = true;
+			
+			
+			
+			document.getElementById("status").value = s;
+			document.getElementById("status").readOnly = true;
+			
+			var smallImage = document.getElementById('smallImage');
+			smallImage.style.display = 'inline-block';
+			img= imageData;
+		    smallImage.src = "data:image/jpeg;base64," + imageData;
+		}
+		else
+		{
+			alert('No rows fetched');
+		}
+	}
+	
+	function errorCBi(err) {
+		alert("Error processing select SQL");
+	}
+	function viewImg(){
+		window.location.href="iimg.html";
+	}
+</script>
+
+<style>
+table {
+    width:40%;
+    height:auto;
+    box-shadow: 6px 6px 5px #888888;
+    background-color:#ffffff;
+    border-radius: 8px;
+    border:0px;
+    font-size: 30px;
+    margin-bottom: 10%;
+}
+
+td {
+    padding: 2px;
+    text-align: center;
+    width: 100%:
+    margin-top:2%;
+    margin-bottom:2%; 
+}
+tr {
+	margin-top: 100px;
+	margin-bottom: 100px;
+	box-shadow: 3px 3px 2px #888888;
+	font-size: 14px;
+	color:#ffffff;
+	border-radius: 8px;
+	height:10%;
+}
+
+table caption {
+	background-color: #00BCD4;
+	padding: 5px;
+	margin-top:5%;
+	margin-bottom:5%;
+	font-size: 30px;
+    color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 6px 6px 5px #888888;
+}
+
+</style>
+</head>
+<body style="background-color:#f2f2f2;" onload="init()">
+
+<table style="width:100%;height:100%;border-radius:8px;">
+ <caption>Lend ya!</caption>
+
+<tr rowspan="20" colspan="2">
+<td colspan="2" style="text-align: center;"><input type="text" id="iname" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;background-color:#ECEFF1;align:center;background-color:#ECEFF1;color: #000000;font-size: 17px;margin-top:5px;margin-bottom:5px;margin-left:2px;margin-right:2px;" placeholder="Item details" value=""></td>
+</tr>
+<tr rowspan="20" colspan="2">
+<td colspan="2" style="text-align: center;"><input type="text" id="activity" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;background-color:#ECEFF1;align:center;background-color:#ECEFF1;color: #000000;font-size: 17px;margin-top:5px;margin-bottom:5px;margin-left:2px;margin-right:2px;" placeholder="Activity" value=""></td>
+</tr>
+
+<tr rowspan="20" colspan="2">
+<td colspan="2" style="text-align: center;"><input type="text" id="on" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;background-color:#ECEFF1;align:center;background-color:#ECEFF1;color: #000000;font-size: 17px;margin-top:5px;margin-bottom:5px;margin-left:2px;margin-right:2px;" placeholder="Loan date" value=""></td>
+</tr>
+
+<tr rowspan="20" colspan="2">
+<td colspan="2" style="text-align: center;"><input type="text" id="notifydate" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;background-color:#ECEFF1;display:inline-block;align:center;background-color:#ECEFF1;color: #000000;font-size: 17px;margin-top:5px;margin-bottom:5px;margin-left:2px;margin-right:2px;" placeholder="Notification" value=""></td>
+</tr>
+<tr rowspan="20" colspan="2">
+<td colspan="2" style="text-align: center;"><input type="text" id="status" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;background-color:#ECEFF1;align:center;background-color:#ECEFF1;color: #000000;font-size: 17px;margin-top:5px;margin-bottom:5px;margin-left:2px;margin-right:2px;" placeholder="Status" value=""></td>
+</tr>
+<tr rowspan="20" colspan="2">
+<td colspan="2"><img style="width:120px;height:120px;margin-top:10px;margin-bottom:10px;display:none;border-radius: 10px;box-shadow: 6px 6px 5px #888888;" id="smallImage" src="" onclick="viewImg()"/><br></td>
+</tr>
+</table>
+
+</body>
+</html>

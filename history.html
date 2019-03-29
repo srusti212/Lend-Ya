@@ -1,0 +1,232 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+
+<title>Cordova</title>
+
+<script type="text/javascript" charset="utf-8" src="cordova-1.9.0.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf-8" >
+		function init(){
+    		document.addEventListener("deviceready", onDeviceReady, false);
+         }
+		function onDeviceReady() {
+			document.addEventListener("backbutton", onBackButton, false);
+			db = window.openDatabase("Database", "1.0", "Cordova Demo", 2*1024*1024);
+			db.transaction(populateDB);
+			db.transaction(myopulateDB);
+			db.transaction(notifyDB);
+		}
+		function onBackButton(){
+		window.location.href="index.html";
+		}
+		function populateDB(tx) {
+			tx.executeSql('SELECT iname,activity,person,notify,notifydate,status FROM REMINDER WHERE status = \'Ongoing\'', [], onGoingQuerySuccess, errorCBi);
+		}
+		function myopulateDB(tx) {
+			tx.executeSql('SELECT iname,activity,person,notify,notifydate,status FROM REMINDER  WHERE status=\'Completed\'', [], completedQuerySuccess, errorCBi);
+		}
+		function notifyDB(tx) {
+			var today = new Date();
+			var dd = today.getDate();
+			var mm = today.getMonth()+1; //January is 0!
+			
+			var yyyy = today.getFullYear();
+			if(dd<10){
+			    dd='0'+dd
+			} 
+			if(mm<10){
+			    mm='0'+mm
+			} 
+			today = yyyy+'-'+mm+'-'+dd;
+			s=today.toString();
+			tx.executeSql("SELECT iname,activity,person,activity,status FROM REMINDER WHERE notifydate = \'"+s+"\'", [], onNotifySuccess, errorNotifyCBi);
+		}
+		function errorCBi(err) {
+			alert("Error processing select SQL");
+		}
+	
+		function onGoingQuerySuccess(tx, results) {
+			$('#ongoingDiv').empty();
+			var len = results.rows.length;
+			var data = "<table style=\"font-size:14px;\"><caption>Ongoing</caption>";
+			var arr = [];
+			for(var j=0; j<len; j++) {
+			   arr.push(j.toString());
+			}
+			for (var i=0; i<len; i++)
+			{
+			     data = "<tr style=\"display:inline-block;\"><td>"+results.rows.item(i).iname + "</td><td> " + results.rows.item(i).activity + "</td><td> " + results.rows.item(i).person +"</td><td><button style=\"margin-top:5px;margin-bottom:5px; background-color: #CFD8DC; box-shadow: 3px 3px 5px #888888;font-size: 12px;padding: 3px;float=right;color: #000000;border:1px;border-radius: 8px;\" class=\"del_btn\">!</button></td></tr>";
+			     $('#ongoingDiv').append(data + '<br>');  
+		    }
+		    $(document).on('click','.del_btn',function(){
+		    var s=$(this).closest('tr');
+		    var _in=$(s).find('td:eq(0)').text();
+		    navigator.notification.confirm('Choose action to perform',
+		    function(button){
+            onConfirm(button, _in);
+	        },
+	        ''+_in,
+	        'View,Returned,Delete');
+		    });
+		}
+		function onConfirm(button,data) {
+			if(button==1)
+			{
+			sessionStorage.myObject = JSON.stringify(data); 
+			window.location.href="viewItem.html";
+			}
+			else if(button==2){
+			db = window.openDatabase("Database", "1.0", "Cordova Demo", 2*1024*1024);
+			db.transaction(function(tx){
+			tx.executeSql("UPDATE REMINDER SET status=\'Completed\' WHERE iname=\'"+data+"\'",[], onDeviceReady, errorCBi); 
+			});
+			}
+			else{
+			db = window.openDatabase("Database", "1.0", "Cordova Demo", 2*1024*1024);
+			db.transaction(function(tx){
+			tx.executeSql("DELETE FROM REMINDER WHERE iname=\'"+data+"\'",[], onDeviceReady, errorCBi); 
+			});	
+			}
+			}
+			
+    	function completedQuerySuccess(tx, results) {
+
+			$('#completedDiv').empty();
+			var len = results.rows.length;
+			var arr = [];
+			for(var j=0; j<len; j++) {
+			   arr.push(j.toString());
+			}
+			var data = "<table style=\"font-size:14px;\"><caption>Completed</caption>";
+			for (var i=0; i<len; i++)
+			{
+			     data = "<tr style=\"display:inline-block;\"><td>"+results.rows.item(i).iname + "</td><td> " + results.rows.item(i).activity + "</td><td> " + results.rows.item(i).person +"</td><td><button style=\"margin-top:5px;margin-bottom:5px; background-color: #CFD8DC; box-shadow: 3px 3px 5px #888888;font-size: 12px;padding: 3px;float=right;color: #000000;border:1px;border-radius: 8px;\" class=\"cdel_btn\">!</button></td></tr>";
+			      $('#completedDiv').append(data + '<br>');
+		    } 
+		     $(document).on('click','.cdel_btn',function(){
+		    var s=$(this).closest('tr');
+		    var _in=$(s).find('td:eq(0)').text();
+		      navigator.notification.confirm('Choose action to perform',
+		     function(button){
+            onCompletedConfirm(button, _in);
+	        },
+		      ''+_in,
+		      'View,Delete');
+				    	});
+		     
+		}
+		function onCompletedConfirm(button,data) {
+			if(button==1)
+			{
+			sessionStorage.myObject = JSON.stringify(data); 
+			window.location.href="viewItem.html";
+			}	
+			else
+			{
+			db = window.openDatabase("Database", "1.0", "Cordova Demo", 2*1024*1024);
+			db.transaction(function(tx){
+			tx.executeSql("DELETE FROM REMINDER WHERE iname=\'"+data+"\'",[], onDeviceReady, errorCBi); 
+			});
+			}
+		}
+		function onNotifySuccess(tx, results) {
+			if(results.rows.length>0)
+			{
+				for (var i=0; i<results.rows.length; i++)
+					{
+							var b = results.rows.item(i)['status'];
+							if(b==="Ongoing")
+							{
+								var a = results.rows.item(i)['activity'];
+								if(a==="Borrowed from")
+								    {
+								    	var c= results.rows.item(i)['iname'];
+								    	var d= results.rows.item(i)['person'];
+									    navigator.notification.confirm('Its time to return '+c+' to '+d,onNotifyConfirm,'Reminder','OK');
+									    navigator.notification.vibrate(300);
+									}
+								 else
+								 {
+								    	var c= results.rows.item(i)['iname'];
+								    	var d= results.rows.item(i)['person'];
+									    navigator.notification.confirm('Its time to collect '+c+' from '+d,onNotifyConfirm,'Reminder','OK');
+									    navigator.notification.vibrate(300);
+								}
+							}
+						}
+			}
+		 }   
+		function errorNotifyCBi(err) {
+			alert("Error processing select SQL");
+		}
+		function onNotifyConfirm(button) {
+			}
+</script>
+<style>
+table {
+	width:100%;
+    height:auto;
+    box-shadow: 6px 6px 5px #888888; 
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    font-size: 30px;
+    border:0px;
+    margin-bottom: 10%;
+}
+table caption {
+	background-color: #00BCD4;
+	padding: 5px;  
+	margin-top:7%;
+	margin-bottom:10%;
+    color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 6px 6px 5px #888888;
+}
+
+
+table th{
+	background-color: #ffffff;
+	padding: 5px;
+	margin-bottom:5px;
+	font-size: 20px;
+    color: #00BCD4;
+    border-radius: 8px;
+    box-shadow: 6px 6px 5px #888888;
+}
+</style>
+</head>
+<body style="background-color:#f2f2f2;" onload="init()">
+<table style="width:100%;height:auto;border-radius: 8px;">
+ <caption>Lend ya!</caption>
+ <tr colspan="2">
+ <td style="padding-left:20px;align:center;width:100%;background-color: #00BCD4;margin-right:5%; box-shadow: 3px 3px 5px #888888;float=right;color: #ffffff;border:1px;border-radius: 4px;font-size:15px;">
+ Ongoing
+ </td>
+ </tr>
+ 
+ 
+  <tr colspan="2">
+ <td style="align:center;width:100%;background-color: #ffffff;margin-right:5%; box-shadow: 3px 3px 5px #888888;padding: 2px;float=right;color: #000000;border:1px;border-radius: 4px;font-size:15px;">
+<p id="ongoingDiv"></p>
+ </td>
+ </tr>
+ 
+<tr colspan="2">
+ <td style="padding-left:20px;align:center;width:100%;background-color: #00BCD4;margin-right:5%; box-shadow: 3px 3px 5px #888888;float=right;color: #ffffff;border:1px;border-radius: 4px;font-size:15px;">
+ Completed
+ </td>
+ </tr>
+ 
+ 
+ <tr colspan="2">
+ <td style="align:center;background-color: #ffffff;width:100%;margin-right:5%; box-shadow: 3px 3px 5px #888888;padding: 2px;float=right;color: #000000;border:1px;border-radius: 4px;font-size:15px;">
+	<p id="completedDiv"></p>
+ </td>
+ </tr>
+ 
+</table>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+
+<title>Cordova</title>
+
+<script type="text/javascript" charset="utf-8" src="cordova-1.9.0.js">
+</script>
+
+<script>
+
+   
+   
+   var db,id,name,img,iname,activity,person,notify,notifydate,status,lbdate;
+   var pictureSource;   // picture source
+   var destinationType; // sets the format of returned value 
+   
+    function init() {
+        document.addEventListener("deviceready", onDeviceReady, false);
+        var ex1 = document.getElementById('borrowings');
+		ex1.onclick = handler;
+		
+		var ex2 = document.getElementById('lendings');
+		ex2.onclick = lendhandler;
+		
+		var ex3 = document.getElementById('yes');
+		ex3.onchange = yeshandler;
+		
+		var ex4 = document.getElementById('no');
+		ex4.onchange = nohandler;
+    }
+	
+
+	function onDeviceReady() {
+		document.addEventListener("backbutton", onBackButton, false);
+	 	pictureSource=navigator.camera.PictureSourceType;
+        destinationType=navigator.camera.DestinationType;
+        var today = new Date();
+		var dd = today.getDate();
+		var mm = today.getMonth()+1; //January is 0!
+		
+		var yyyy = today.getFullYear();
+		if(dd<10){
+		    dd='0'+dd
+		} 
+		if(mm<10){
+		    mm='0'+mm
+		} 
+		var today = yyyy+'-'+mm+'-'+dd;
+		document.getElementById("lenddate").value = today;
+		activity="Lent to";
+        db = window.openDatabase("Database", "1.0", "Cordova Demo", 2*1024*1024);
+        db.transaction(populateDB);
+	}
+
+	function populateDB(tx) {
+		tx.executeSql('DROP TABLE IF EXISTS REMINEDR');
+		tx.executeSql('CREATE TABLE IF NOT EXISTS REMINDER (iname unique, activity, person, notify, lbdate, notifydate, status, img)');
+	}
+
+	function execute_query(tx){
+		var query='INSERT INTO REMINDER (iname, activity, person, notify, lbdate, notifydate, status, img) VALUES (?,?,?,?,?,?,?,?)';
+		  tx.executeSql(query, [iname,activity,person,notify,lbdate,notifydate,status,img], showConfirm, errorCB);
+	}
+	function showConfirm() {
+	
+    }
+	function errorCB(err) {
+		alert("Error processing SQL: " + err.message);
+	}
+
+	function successCB() {
+	}
+
+	function insert_data(){
+	
+		var today = new Date();
+		var dd = today.getDate();
+		var mm = today.getMonth()+1; //January is 0!
+		
+		var yyyy = today.getFullYear();
+		if(dd<10){
+		    dd='0'+dd
+		} 
+		if(mm<10){
+		    mm='0'+mm
+		} 
+		today = yyyy+'-'+mm+'-'+dd;
+		
+		lbdate=today.toString();
+		
+		iname=document.getElementById("iname").value;
+		
+		if (document.getElementById('lendings').checked) {
+		person=document.getElementById("bb").value;
+
+		}
+		else{
+		person=document.getElementById("dd").value;
+
+		}
+		if(document.getElementById('yes').checked){
+		notify="Yes";
+
+		notifydate=document.getElementById("lenddate").value;
+		
+		}
+		else{
+		notify="No";
+		
+		notifdate="";
+
+		}
+		status="Ongoing";
+	
+		if(iname!=""&&activity!=""&&person!=""&&notify!=""&&status!=""&&img!=""){
+			navigator.notification.vibrate(300);
+			db.transaction(execute_query,errorCB, successCB);
+		}
+		else{
+			alert("Fill in all details correctly !!!");
+			navigator.notification.vibrate(300);
+		}
+	}
+   
+
+ function reset(){
+ 	window.location.href="addAddLendItem.html";
+ }
+ function capturePic() {
+        navigator.camera.getPicture(onPhotoSuccess, onFail, { quality: 50, allowEdit:true, saveToPhotoAlbum: true, correctOrientation:true, destinationType: destinationType.DATA_URL });
+    }
+function onPhotoSuccess(imageData) {
+	var smallImage = document.getElementById('smallImage');
+	smallImage.style.display = 'inline-block';
+	img= imageData;
+    smallImage.src = "data:image/jpeg;base64," + imageData;
+	}
+function onFail(message) {
+	alert("Failed because: " + message);
+}    
+   
+   
+   
+function yeshandler(){
+	document.getElementById('lenddate').style.display = 'inline-block';
+        document.getElementById('pqr').style.display = 'inline-block';
+        notify="Yes";
+}
+function nohandler(){
+		document.getElementById('lenddate').style.display = 'none';
+        document.getElementById('pqr').style.display = 'none';
+        notify="No";
+}
+function handler() {
+    document.getElementById('bb').style.display='none';
+    document.getElementById('dd').style.display='inline-block';
+    activity="Borrowed from";
+    
+    }
+ function lendhandler() {
+    document.getElementById('bb').style.display='inline-block';
+    document.getElementById('dd').style.display='none';
+    activity="Lent to";
+    }      
+function onBackButton() {
+		window.location.href="index.html";
+	}
+</script>
+
+<style>
+table {
+    width:40%;
+    height:auto;
+    box-shadow: 6px 6px 5px #888888;
+    background-color:#ffffff;
+    border-radius: 8px;
+    border:0px;
+    font-size: 30px;
+    margin-bottom: 10%;
+    margin-left:0.5%;
+    marging-right:0.5%;
+    color: #000000;
+}
+
+td {
+    padding: 2px;
+    text-align: center;
+    width: 100%:
+    margin-top:1%;
+    margin-bottom:1%; 
+}
+tr {
+	margin-top: 50px;
+	margin-bottom: 50px;
+	box-shadow: 3px 3px 2px #888888;
+	font-size: 14px;
+	color:#ffffff;
+	border-radius: 8px;
+	height:8%;
+}
+
+table caption {
+	background-color: #00BCD4;
+	padding: 5px;
+	margin-top:5%;
+	margin-bottom:3%;
+	font-size: 30px;
+    color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 6px 6px 5px #888888;
+}
+
+</style>
+</head>
+<body style="background-color:#f2f2f2;" onload="init()">
+
+<table style="width:100%;height:100%;border-radius:8px;">
+ <caption>Lend ya!</caption>
+
+
+<tr rowspan="20" colspan="2">
+  <td colspan="2" >
+        <fieldset data-role="controlgroup" style="align:right;float:right;font-size:12px;margin:5px;display:inline-block;color:#000000;background-color:#ffffff;border:0px;">
+      	<button style="display:inline-block; background-color: #ECEFF1; box-shadow: 3px 3px 5px #888888;font-size: 12px;padding: 5px;float=right;color: #000000;border:1px;border-radius: 8px;" onclick="insert_data()">Save</button>
+      	<button style="display:inline-block; background-color: #ECEFF1; box-shadow: 3px 3px 5px #888888;font-size: 12px;padding: 5px;float=right;color: #000000;border:1px;border-radius: 8px;" onclick="reset()">Reset</button>
+        </fieldset>
+  </td>
+ </tr>
+
+<tr rowspan="20" colspan="2">
+  <td colspan="2" >
+        <fieldset data-role="controlgroup" style="border-radius: 8px;border:0px;font-size:16px;margin-left:5px;margin-right:5px;margin-bottom:5px;display:inline-block;color:#000000;background-color:#ECEFF1;">
+         <input type="radio" name="task" id="lendings" checked>
+          <label for="lending">Lending</label>
+          <input type="radio" name="task" id="borrowings" >
+           <label for="nonotify">Borrowing</label>
+        </fieldset>
+  </td>
+ </tr>
+
+
+<tr rowspan="20" colspan="2">
+	<td colspan="2" style="text-align: center;"><input type="text"  id="iname" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;background-color:#ECEFF1;color: #000000;font-size: 18px;margin:5px;" placeholder="Enter item name"></td>
+</tr>
+
+  <tr rowspan="20">
+	<td colspan="2" style="text-align: center;float:center;"><input type="text" id ="bb" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;background-color:#ECEFF1;color: #000000;font-size: 18px;margin:5px;" placeholder="Enter borrower's name"></td>
+</tr>
+
+<tr rowspan="20" colspan="2">
+		<td colspan="2" style="text-align: center;float:center;"><input type="text" id ="dd" style="padding-left:3px;padding-right:3px;border-radius: 8px;align:center;display:none;background-color:#ECEFF1;color: #000000;font-size: 18px;margin:5px;" id="addItem" placeholder="Enter lender's name"></td>
+	</tr>
+	
+  <tr rowspan="20" colspan="2">
+  <td colspan="2" >
+        <fieldset data-role="controlgroup" style="border-radius: 8px;font-size:16px;margin-left:4px;margin-right:4px;display:inline-block;color:#000000;background-color:#ECEFF1;border:0px;">
+        <legend>Notify</legend>
+         <input type="radio" name="notify" id="yes">
+          <label for="yesnotify">Yes</label>
+          <input type="radio" name="notify" id="no" checked>
+           <label for="nonotify">No</label>
+        </fieldset>
+  </td>
+  </tr>
+  
+  <tr rowspan="10" colspan="2">
+  <td colspan="2" >
+        <fieldset data-role="controlgroup" style="font-size:16px;display:inline-block;color:#000000;border:0px;margin-left:4px;margin-right:2px;">
+ 			<p id="pqr" style="display:none;color:#000000;font-size:16px;">Select date</p>
+		  	<input type="date" name="lenddate" id="lenddate" style="width:auto;display:none;border-radius: 8px;float:center;background-color:#ECEFF1;color:#000000;font-size:14px;" required>
+        </fieldset>
+  </td>
+  </tr>
+	
+  <tr rowspan="10" colspan="2">
+  	<td colspan="1"><button style="background-color: #ffffff;margin-left:10px;margin-bottom:10px;border: none;color: #000000;font-size: 16px;padding: 5px 10px;text-align: center;text-decoration: none;display: inline-block;cursor: pointer;border-radius: 8px;box-shadow: 6px 6px 5px #888888;" onclick="capturePic()">Capture image</button></td>
+  	<td colspan="1"><img style="display:none;margin-right:10px;margin-bottom:10px;width:100px;height:100px;border-radius: 8px;box-shadow: 6px 6px 5px #888888;" id="smallImage" src="" /><br></td>
+  </tr>
+
+</table>
+
+</body>
+</html>
